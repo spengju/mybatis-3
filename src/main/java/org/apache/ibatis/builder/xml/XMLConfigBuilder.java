@@ -114,20 +114,33 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void parseConfiguration(XNode root) {
     try {
       // issue #117 read properties first
+      // 对应的是Configuration中的variables属性
       propertiesElement(root.evalNode("properties"));
+
+      // 对应的是Configuration中的set属性
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfsImpl(settings);
       loadCustomLogImpl(settings);
+
       typeAliasesElement(root.evalNode("typeAliases"));
+
+      //插件机制
       pluginsElement(root.evalNode("plugins"));
+
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+
       settingsElement(settings);
+
       // read it after objectFactory and objectWrapperFactory issue #631
+      // databaseId
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+
       typeHandlersElement(root.evalNode("typeHandlers"));
+
+      // 扫描MappedStatement
       mappersElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -138,9 +151,14 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context == null) {
       return new Properties();
     }
+
+    // <settings>标签下的子节点
     Properties props = context.getChildrenAsProperties();
     // Check that all settings are known to the configuration class
+    // 利用MetaClass可以更方便的判断Configuration中是否存在某个方法
     MetaClass metaConfig = MetaClass.forClass(Configuration.class, localReflectorFactory);
+
+    // 判断settings中的配置项name是否在Configuration中有set方法，后面要调用set将配置项值设置给Configuration对象
     for (Object key : props.keySet()) {
       if (!metaConfig.hasSetter(String.valueOf(key))) {
         throw new BuilderException(
@@ -177,6 +195,7 @@ public class XMLConfigBuilder extends BaseBuilder {
     for (XNode child : context.getChildren()) {
       if ("package".equals(child.getName())) {
         String typeAliasPackage = child.getStringAttribute("name");
+        // 扫描typeAliasPackage下的类，自动生成别名，并处理@Alias注解
         configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
       } else {
         String alias = child.getStringAttribute("alias");
@@ -241,19 +260,25 @@ public class XMLConfigBuilder extends BaseBuilder {
     Properties defaults = context.getChildrenAsProperties();
     String resource = context.getStringAttribute("resource");
     String url = context.getStringAttribute("url");
+
+    // resource和url不能同时存在
     if (resource != null && url != null) {
       throw new BuilderException(
           "The properties element cannot specify both a URL and a resource based property file reference.  Please specify one or the other.");
     }
+    // 覆盖defaults
     if (resource != null) {
       defaults.putAll(Resources.getResourceAsProperties(resource));
     } else if (url != null) {
       defaults.putAll(Resources.getUrlAsProperties(url));
     }
+    // 覆盖defaults
     Properties vars = configuration.getVariables();
     if (vars != null) {
       defaults.putAll(vars);
     }
+
+    // 设置给parser和configuration
     parser.setVariables(defaults);
     configuration.setVariables(defaults);
   }
@@ -298,12 +323,16 @@ public class XMLConfigBuilder extends BaseBuilder {
     if (context == null) {
       return;
     }
+
+    // 如果调用SqlSessionFactory的build方法没有传environment，那就用默认的
     if (environment == null) {
       environment = context.getStringAttribute("default");
     }
     for (XNode child : context.getChildren()) {
       String id = child.getStringAttribute("id");
+      // 判断environment和id是否相等
       if (isSpecifiedEnvironment(id)) {
+
         TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
         DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
         DataSource dataSource = dsFactory.getDataSource();
@@ -328,9 +357,15 @@ public class XMLConfigBuilder extends BaseBuilder {
     DatabaseIdProvider databaseIdProvider = (DatabaseIdProvider) resolveClass(type).getDeclaredConstructor()
         .newInstance();
     databaseIdProvider.setProperties(properties);
+
+    // mybatis-config.xml中指定的Environment
     Environment environment = configuration.getEnvironment();
     if (environment != null) {
+
+      // 根据DataSource找出databaseId
       String databaseId = databaseIdProvider.getDatabaseId(environment.getDataSource());
+
+      // 相当于当前mybatis用的是哪个数据库，后续会用来匹配MapperStatement
       configuration.setDatabaseId(databaseId);
     }
   }
@@ -369,6 +404,8 @@ public class XMLConfigBuilder extends BaseBuilder {
         String javaTypeName = child.getStringAttribute("javaType");
         String jdbcTypeName = child.getStringAttribute("jdbcType");
         String handlerTypeName = child.getStringAttribute("handler");
+
+        //根据别名找到类名，然后加载类
         Class<?> javaTypeClass = resolveClass(javaTypeName);
         JdbcType jdbcType = resolveJdbcType(jdbcTypeName);
         Class<?> typeHandlerClass = resolveClass(handlerTypeName);

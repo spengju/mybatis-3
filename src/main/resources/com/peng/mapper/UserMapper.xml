@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--suppress MybatisPlusMapperXmlInspection -->
+<mapper namespace="com.peng.mapper.UserMapper">
+
+    <resultMap id="blogMap" type="com.peng.BlogInfo">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="title" column="title"/>
+    </resultMap>
+
+    <resultMap id="userMap" type="com.peng.UserInfo">
+        <id property="id" column="id"/>
+        <result property="name" column="name" />
+    </resultMap>
+
+    <select id="getUserInfo" resultMap="userMap">
+        select * from user_info <where>and and id = #{id}</where>
+    </select>
+
+    <!--    <select id="getBlogInfo" resultMap="blogMap">-->
+    <!--        SELECT * FROM blog_info WHERE user_id = #{id};-->
+    <!--    </select>-->
+
+    <!--    <select id="getUserInfoAndBlogInfo" resultMap="userMap">-->
+    <!--        select u.id as user_id, u.name, b.id as blog_id, b.title from blog_info b join user_info u on b.user_id = u.id where u.id = 26;-->
+    <!--    </select>-->
+
+
+    <insert id="insertUser" parameterType="com.peng.UserInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into user_info(name) values(#{name})
+    </insert>
+
+    <insert id="insertUserList" parameterType="List" useGeneratedKeys="true" keyProperty="id">
+        insert into user_info(name) values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.name})
+        </foreach>
+    </insert>
+
+
+
+
+</mapper>

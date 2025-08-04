@@ -121,16 +121,26 @@ public class MapperAnnotationBuilder {
       loadXmlResource();
       configuration.addLoadedResource(resource);
       assistant.setCurrentNamespace(type.getName());
+
+      // 解析@CacheNamespace
       parseCache();
+
+      // 解析@CacheNamespaceRef
       parseCacheRef();
+
+
       for (Method method : type.getMethods()) {
+
+        // 不处理桥接方法和默认方法
         if (!canHaveStatement(method)) {
           continue;
         }
+
         if (getAnnotationWrapper(method, false, Select.class, SelectProvider.class).isPresent()
             && method.getAnnotation(ResultMap.class) == null) {
           parseResultMap(method);
         }
+
         try {
           parseStatement(method);
         } catch (IncompleteElementException e) {
@@ -289,6 +299,8 @@ public class MapperAnnotationBuilder {
     final LanguageDriver languageDriver = getLanguageDriver(method);
 
     getAnnotationWrapper(method, true, statementAnnotationTypes).ifPresent(statementAnnotation -> {
+
+      // 依次处理方法上statementAnnotationTypes中定义的每个注解
       final SqlSource sqlSource = buildSqlSource(statementAnnotation.getAnnotation(), parameterTypeClass,
           paramNameResolver, languageDriver, method);
       final SqlCommandType sqlCommandType = statementAnnotation.getSqlCommandType();

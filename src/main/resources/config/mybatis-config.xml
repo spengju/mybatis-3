@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+<!--    <settings>-->
+<!--        <setting name="" value=""/>-->
+<!--        <setting name="defaultScriptingLanguage" value="ZhouyuLanguageDriver" />-->
+<!--    </settings>-->
+
+    <typeAliases>
+<!--        <typeAlias type="com.zhouyu.UserInfo" alias="User"/>-->
+        <!--   会自动对该包下的类生成别名，比如com.zhouyu.User对应的别名为user，同时也会处理@Alias注解     -->
+<!--        <typeAlias alias="ZhouyuLanguageDriver" type="com.peng.ZhouyuLanguageDriver" />-->
+        <package name="com.zhouyu"/>
+    </typeAliases>
+
+    <typeHandlers>
+        <typeHandler handler="com.zhouyu.ZhouyuTypeHandler" jdbcType="VARCHAR" javaType="Integer"/>
+    </typeHandlers>
+
+    <plugins>
+        <plugin interceptor="com.zhouyu.ZhouyuPlugin">
+            <property name="someProperty" value="100"/>
+        </plugin>
+    </plugins>
+
+    <environments default="mysql">
+        <environment id="mysql" >
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/my_db"/>
+                <property name="username" value="root"/>
+                <property name="password" value="Zhouyu123456..."/>
+            </dataSource>
+        </environment>
+        <environment id="postgres">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="org.postgresql.Driver"/>
+                <property name="url" value="jdbc:postgresql://127.0.0.1:5432/my_db"/>
+                <property name="username" value="postgres"/>
+                <property name="password" value="Zhouyu123456..."/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <databaseIdProvider type="DB_VENDOR">
+        <property name="MySQL" value="mysql"/>
+        <property name="PostgreSQL" value="postgres"/>
+    </databaseIdProvider>
+
+    <mappers>
+        <mapper resource="com/zhouyu/mapper/UserMapper.xml"/>
+    </mappers>
+</configuration>

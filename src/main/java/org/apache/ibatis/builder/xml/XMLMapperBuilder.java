@@ -102,9 +102,15 @@ public class XMLMapperBuilder extends BaseBuilder {
   }
 
   public void parse() {
+    //判断当前resource是否解析过
     if (!configuration.isResourceLoaded(resource)) {
+
+      //解析mapper文件中的MapperStatement
       configurationElement(parser.evalNode("/mapper"));
+
       configuration.addLoadedResource(resource);
+
+      //解析mapper文件中对应的Mapper接口中的MapperStatement
       bindMapperForNamespace();
     }
     configuration.parsePendingResultMaps(false);
@@ -123,11 +129,16 @@ public class XMLMapperBuilder extends BaseBuilder {
         throw new BuilderException("Mapper's namespace cannot be empty");
       }
       builderAssistant.setCurrentNamespace(namespace);
+
       cacheRefElement(context.evalNode("cache-ref"));
       cacheElement(context.evalNode("cache"));
+
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+
       sqlElement(context.evalNodes("/mapper/sql"));
+
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
@@ -143,6 +154,7 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private void buildStatementFromContext(List<XNode> list, String requiredDatabaseId) {
     for (XNode context : list) {
+      // 一个MapperStatement节点对应一个statementParser
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context,
           requiredDatabaseId, mapperClass);
       try {
@@ -402,12 +414,16 @@ public class XMLMapperBuilder extends BaseBuilder {
   private void bindMapperForNamespace() {
     String namespace = builderAssistant.getCurrentNamespace();
     if (namespace != null) {
+
+      // boundType为mapper文件对应的mapper接口
       Class<?> boundType = null;
       try {
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
         // ignore, bound type is not required
       }
+
+      // 解析mapper接口中定义的MapperStatement
       if (boundType != null && !configuration.hasMapper(boundType)) {
         // Spring may not know the real resource name so we set a flag
         // to prevent loading again this resource from the mapper interface
