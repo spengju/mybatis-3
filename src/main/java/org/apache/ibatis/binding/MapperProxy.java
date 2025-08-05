@@ -69,10 +69,13 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
 
   private MapperMethodInvoker cachedInvoker(Method method) throws Throwable {
     try {
+      // 方法不是接口中的默认方法，PlainMethodInvoker的底层会调用MapperMethod的execute方法，从而执行方法对应的SQL
       return methodCache.computeIfAbsent(method, m -> {
         if (!m.isDefault()) {
           return new PlainMethodInvoker(new MapperMethod(mapperInterface, method, sqlSession.getConfiguration()));
         }
+
+        // 方法如果是接口中的默认方法，那么方法已经有逻辑了，DefaultMethodInvoker是专门针对默认方法的MapperMethodInvoker，底层会利用反射执行默认方法的逻辑，不会执行SQL
         try {
           return new DefaultMethodInvoker(getMethodHandleJava9(method));
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
